@@ -1,0 +1,95 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*- 
+
+# Inspired by dheera's comment on HN: https://news.ycombinator.com/item?id=14777628
+
+from __future__ import unicode_literals
+
+import sys
+import time
+
+from subprocess import Popen, PIPE
+
+SHIFT = lambda x: 'keydown Shift_L\n%s\nkeyup Shift_L' % x
+
+MACRO_MAP = {
+	'=': 'key equal',
+	'+': SHIFT('key equal'),
+
+	'!': SHIFT('key 1'),
+	'"': SHIFT('key 2'),
+	'£': SHIFT('key 3'),
+	'$': SHIFT('key 4'),
+	'%': SHIFT('key 5'),
+	'^': SHIFT('key 6'),
+	'&': SHIFT('key 7'),
+	'*': SHIFT('key 8'),
+	'(': SHIFT('key 9'),
+	')': SHIFT('key 0'),
+
+	'-': 'key minus',
+	'_': SHIFT('key minus'),
+
+	'#': 'key numbersign',
+	'~': SHIFT('key numbersign'),
+
+	'\'': 'key apostrophe',
+	'@': SHIFT('key apostrophe'),
+
+	'/': 'key slash',
+	'?': SHIFT('key slash'),
+
+	'.': 'key period',
+	'>': SHIFT('key period'),
+
+	',': 'key comma',
+	'<': SHIFT('key comma'),
+
+	']': 'key bracketright',
+	'}': SHIFT('key bracketright'),
+
+	'[': 'key bracketleft',
+	'{': SHIFT('key bracketleft'),
+
+	'\\': 'key backslash',
+	'|': SHIFT('key backslash'),
+
+	'`': 'key grave',
+	'¬': SHIFT('key grave'),
+}
+
+
+def xte_char_macro(char):
+	if char.islower() or char.isdigit():
+		return 'key %s' % char
+
+	if char.isupper():
+		return SHIFT('key %s' % char)
+
+	if char in MACRO_MAP:
+		return MACRO_MAP[char]
+
+	raise ValueError('No macro for %s' % char)
+
+
+def xte_password_macro(password):
+	return '\n'.join([xte_char_macro(x) for x in password]) + '\n'
+
+
+if __name__ == '__main__':
+	password = sys.stdin.read().strip()
+
+	try:
+		password = password.decode('utf-8')
+	except AttributeError:
+		pass
+
+	password_macro = xte_password_macro(password)
+
+	print('Typing password in 3 seconds... ^C to cancel')
+
+	try:
+		time.sleep(3)
+		Popen(['xte'], stdin=PIPE).communicate(password_macro.encode())
+	except KeyboardInterrupt:
+		print('Cancelled.')

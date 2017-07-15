@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*- 
+
+from __future__ import unicode_literals
+
+import argparse
+import os
+import random
+import string
+
+from functools import reduce
+
+SYMBOLS = ' .,!£$%^&*()-_[]{}<>@~'
+AMBIGUOUS = 'B8G6I1lO0QDS5Z2'  # https://ux.stackexchange.com/questions/53341/are-there-any-letters-numbers-that-should-be-avoided-in-an-id
+
+
+def pwgen(length=32, no_symbols=False, allow_ambiguous=True):
+	source = [
+		x for x in string.ascii_letters + string.digits + (SYMBOLS if not no_symbols else '')
+		if allow_ambiguous or x not in AMBIGUOUS
+	]
+	
+	return reduce(
+		lambda x, y: x + y,
+		[source[ord(os.urandom(1)) % len(source)] for _ in range(length)]
+	)
+
+
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser()
+	parser.add_argument('-l', '--length', type=int, default=32, help='length of password')
+	parser.add_argument('-s', '--no-symbols', action='store_true', help='don\'t use symbols')
+	parser.add_argument('-a', '--allow-ambiguous', action='store_true', help='use ambiguous characters')
+	args = parser.parse_args()
+
+	print(pwgen(**vars(args)))
